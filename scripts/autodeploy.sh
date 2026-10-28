@@ -13,7 +13,8 @@
 #      - composer install --no-dev, hanya bila composer.json/lock berubah atau
 #        vendor/ belum ada (Composer diunduh sekali, versi dan checksum dikunci);
 #      - migrate, publikasi aset Filament, cache config/route/view;
-#      - salin aset public/ ke public_html/panel.
+#      - salin aset public/ ke public_html/panel, kecuali yang di sana sudah
+#        berupa symlink ke public/.
 #
 # Cron (cPanel -> Cron Jobs, tiap 5 menit):
 #   cd /home2/heav0538/heavypack-admin && git pull -q --ff-only origin main >/dev/null 2>&1; /bin/bash scripts/autodeploy.sh >/dev/null 2>&1
@@ -50,6 +51,17 @@ ensure_composer() {
     mv "$composer.tmp" "$composer"
 }
 
+# Di server, css/js/fonts/images di public_html/panel adalah symlink ke public/
+# folder ini, jadi sudah ikut terbarui; hanya yang bukan symlink yang disalin.
+sync_panel() {
+    local item
+    [ -d "$panel" ] || { echo "folder $panel tidak ada"; return 1; }
+    for item in css js fonts images favicon.ico robots.txt; do
+        [ "$(readlink -f "$panel/$item")" = "$(readlink -f "public/$item")" ] && continue
+        /bin/cp -R "public/$item" "$panel"/ || return 1
+    done
+}
+
 # Dipanggil dari main; memakai variabel php, panel, composer dan deployed miliknya.
 # Sengaja tanpa set -e: di dalam kondisi if, bash mengabaikannya.
 deploy_steps() {
@@ -57,13 +69,12 @@ deploy_steps() {
         || ! git diff --quiet "$deployed" HEAD -- composer.json composer.lock 2>/dev/null; then
         ensure_composer || return 1
         "$php" -d memory_limit=1536M "$composer" install --no-dev --no-interaction \
-            --prefer-dist --optimize-autoloader --no-progress || return 1
+            --prefer-dist --optimize-autoloader --no-progress --no-ansi || return 1
     fi
-    "$php" artisan migrate --force --no-interaction \
-        && "$php" artisan filament:assets \
-        && "$php" artisan optimize \
-        && /bin/cp -R public/css public/js public/fonts public/images "$panel"/ \
-        && /bin/cp public/favicon.ico public/robots.txt "$panel"/
+    "$php" artisan migrate --force --no-interaction --no-ansi \
+        && "$php" artisan filament:assets --no-ansi \
+        && "$php" artisan optimize --no-ansi \
+        && sync_panel
 }
 
 main() {

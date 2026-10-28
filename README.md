@@ -199,8 +199,9 @@ Folder `/home2/heav0538/heavypack-admin` di server adalah clone repo ini. Alurny
 2. Dalam ±5 menit, Cron Jobs di cPanel menjalankan `scripts/autodeploy.sh`:
    menarik `main` dari GitHub, `composer install --no-dev` (hanya bila
    `composer.json`/`composer.lock` berubah), `migrate`, `filament:assets`,
-   `optimize`, lalu menyalin `public/` (css, js, fonts, images) ke
-   `public_html/panel`.
+   `optimize`. Folder `css`, `js`, `fonts` dan `images` di `public_html/panel`
+   adalah symlink ke `public/` folder ini, jadi langsung ikut terbarui; isi
+   `public/` lain yang bukan symlink disalin ke sana.
 
 Hasil deploy dan error tercatat di `/home2/heav0538/logs/heavypack-admin-deploy.log`
 (buka lewat File Manager). Server tidak punya Composer; skrip mengunduh
@@ -214,8 +215,7 @@ milik repo website; GitHub tidak mengizinkan satu deploy key dipakai dua repo.
 Jangan mengubah file di folder server: deploy akan berhenti sampai perubahan itu
 dibuang. Yang tidak pernah disentuh deploy: `.env`, `storage/`,
 `public_html/panel/index.php` dan `public_html/panel/.htaccess` (berisi handler
-PHP 8.4 dari cPanel). File yang dihapus dari `public/` tidak ikut terhapus di
-`public_html/panel`.
+PHP 8.4 dari cPanel).
 
 Saat ini panel di server masih **mode uji coba**: `HEAVYPACK_CONTENT_MODE=testing`,
 konten dari database salinan `heav0538_hpuji`, dan media di
