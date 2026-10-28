@@ -4,10 +4,11 @@ Panel admin pengganti `bawaanAdmin`. Laravel 13.36, Filament 5.10, Livewire 4,
 PHP 8.5 di lokal (8.4 di server). Aset panel sudah di-build; tidak perlu
 `npm run dev`.
 
-Folder ini adalah salinan dari server (`/home2/heav0538/heavypack-admin`) yang
-diunduh 28 Okt 2026 lalu disetel untuk lokal. Folder ini tidak memakai Git.
-Skrip pengembangan awal (`SERVE-ADMIN.bat`, `.runtime/`, `.scripts/`, `tests/`)
-tidak ikut terunduh.
+Repo: https://github.com/jefthah/heavypack-admin (private), branch `main`.
+Kode awalnya diambil dari server (`/home2/heav0538/heavypack-admin`) pada
+28 Okt 2026 karena riwayat git pengembangan awal tidak tersedia. Skrip
+pengembangan awal (`SERVE-ADMIN.bat`, `.runtime/`, `.scripts/`, `tests/`) tidak
+ikut.
 
 ## Menjalankan
 
