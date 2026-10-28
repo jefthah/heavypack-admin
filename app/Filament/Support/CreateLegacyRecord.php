@@ -2,16 +2,16 @@
 
 namespace App\Filament\Support;
 
-use App\Support\LegacyMedia;
 use Filament\Resources\Pages\CreateRecord;
 
 abstract class CreateLegacyRecord extends CreateRecord
 {
+    use PreparesLegacyMedia;
     use UsesCatalogTransactions;
 
     protected function mutateFormDataBeforeCreate(array $data): array
     {
-        return LegacyMedia::prepare($data, static::getResource()::definition());
+        return $this->prepareLegacyMedia($data);
     }
 
     protected function getRedirectUrl(): string

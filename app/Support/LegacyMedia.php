@@ -88,10 +88,12 @@ class LegacyMedia
                     if ($oldPath && $name !== $record->getAttribute($image['namingField'])) {
                         static::validateName($name, $image['namingField']);
                         $newPath = $image['directory'].'/'.$name.'.'.$image['extension'];
-                        if ($disk->exists($newPath)) {
+                        if (! $disk->exists($newPath)) {
+                            $disk->copy($oldPath, $newPath);
+                        } elseif ($disk->checksum($newPath) !== $disk->checksum($oldPath)) {
+                            // An identical file is the earlier copy left by renaming back to a previous name.
                             throw ValidationException::withMessages([$image['namingField'] => 'Nama ini sudah mempunyai gambar. Gunakan nama lain.']);
                         }
-                        $disk->copy($oldPath, $newPath);
                     }
                 }
 

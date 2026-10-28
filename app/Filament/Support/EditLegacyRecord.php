@@ -2,17 +2,17 @@
 
 namespace App\Filament\Support;
 
-use App\Support\LegacyMedia;
 use Filament\Actions\DeleteAction;
 use Filament\Resources\Pages\EditRecord;
 
 abstract class EditLegacyRecord extends EditRecord
 {
+    use PreparesLegacyMedia;
     use UsesCatalogTransactions;
 
     protected function mutateFormDataBeforeSave(array $data): array
     {
-        return LegacyMedia::prepare($data, static::getResource()::definition(), $this->getRecord());
+        return $this->prepareLegacyMedia($data, $this->getRecord());
     }
 
     protected function getHeaderActions(): array
