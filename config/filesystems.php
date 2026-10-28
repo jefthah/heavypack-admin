@@ -42,7 +42,8 @@ return [
             'driver' => 'local',
             'root' => env('LEGACY_MEDIA_ROOT', storage_path('app/legacy-media')),
             'url' => env('LEGACY_MEDIA_URL', rtrim(env('APP_URL', 'http://127.0.0.1:8001'), '/').'/media'),
-            'visibility' => 'private',
+            // Dibaca langsung oleh web server dari public_html: file 0644, folder 0755.
+            'visibility' => 'public',
             'throw' => true,
         ],
 
