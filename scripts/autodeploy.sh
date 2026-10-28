@@ -36,7 +36,11 @@ COMPOSER_SHA256=7a2d379d5b8ffdaa028580ef26494c36d2feef4b178d3dd1473a4dbc5e17c8d6
 ensure_composer() {
     [ -f "$composer" ] && return 0
     mkdir -p "$(dirname "$composer")"
-    "$php" -r 'exit(copy($argv[1], $argv[2]) ? 0 : 1);' \
+    # Lewat ekstensi curl, karena copy() butuh allow_url_fopen yang belum tentu aktif.
+    "$php" -r '$f = fopen($argv[2], "w"); $c = curl_init($argv[1]);
+        curl_setopt_array($c, [CURLOPT_FILE => $f, CURLOPT_FOLLOWLOCATION => true, CURLOPT_FAILONERROR => true]);
+        $ok = curl_exec($c); fclose($f);
+        if (! $ok) { fwrite(STDERR, "unduh composer.phar gagal: ".curl_error($c)."\n"); exit(1); }' \
         "https://getcomposer.org/download/$COMPOSER_VERSION/composer.phar" "$composer.tmp" || return 1
     if [ "$("$php" -r 'echo hash_file("sha256", $argv[1]);' "$composer.tmp")" != "$COMPOSER_SHA256" ]; then
         rm -f "$composer.tmp"
@@ -95,9 +99,11 @@ main() {
     if [ "$(git rev-parse --abbrev-ref HEAD)" != "$branch" ]; then
         log "GAGAL: branch aktif bukan $branch"; return 1
     fi
-    if [ -n "$(git status --porcelain)" ]; then
+    # Hanya file yang dilacak git: file liar seperti error_log buatan PHP cPanel
+    # tidak boleh menghentikan deploy, tetapi edit manual pada kode harus.
+    if [ -n "$(git status --porcelain --untracked-files=no)" ]; then
         log "GAGAL: ada perubahan lokal di folder server, deploy dibatalkan"
-        git status --porcelain >> "$log_file"
+        git status --porcelain --untracked-files=no >> "$log_file"
         return 1
     fi
 
