@@ -191,6 +191,32 @@ website.
 Panel berjalan di https://panel.heavypack.id/admin. `public_html/panel/index.php`
 meneruskan request ke `/home2/heav0538/heavypack-admin/public/index.php`.
 
+### Deploy
+
+Folder `/home2/heav0538/heavypack-admin` di server adalah clone repo ini. Alurnya:
+
+1. Kerjakan perubahan, lalu gabungkan ke `main` dan `git push`.
+2. Dalam ±5 menit, Cron Jobs di cPanel menjalankan `scripts/autodeploy.sh`:
+   menarik `main` dari GitHub, `composer install --no-dev` (hanya bila
+   `composer.json`/`composer.lock` berubah), `migrate`, `filament:assets`,
+   `optimize`, lalu menyalin `public/` (css, js, fonts, images) ke
+   `public_html/panel`.
+
+Hasil deploy dan error tercatat di `/home2/heav0538/logs/heavypack-admin-deploy.log`
+(buka lewat File Manager). Server tidak punya Composer; skrip mengunduh
+Composer 2.10.3 sekali ke `~/.heavypack-admin-tools/` dan memeriksa checksum-nya.
+PHP yang dipakai: `/opt/cpanel/ea-php84/root/usr/bin/php`.
+
+Server menarik dari GitHub dengan deploy key read-only `~/.ssh/heavypack_admin`
+lewat alias `github-heavypack-admin` di `~/.ssh/config`. Key `~/.ssh/id_rsa`
+milik repo website; GitHub tidak mengizinkan satu deploy key dipakai dua repo.
+
+Jangan mengubah file di folder server: deploy akan berhenti sampai perubahan itu
+dibuang. Yang tidak pernah disentuh deploy: `.env`, `storage/`,
+`public_html/panel/index.php` dan `public_html/panel/.htaccess` (berisi handler
+PHP 8.4 dari cPanel). File yang dihapus dari `public/` tidak ikut terhapus di
+`public_html/panel`.
+
 Saat ini panel di server masih **mode uji coba**: `HEAVYPACK_CONTENT_MODE=testing`,
 konten dari database salinan `heav0538_hpuji`, dan media di
 `storage/app/legacy-media` milik panel sendiri. Perubahan di panel server
