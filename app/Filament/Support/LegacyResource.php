@@ -107,6 +107,18 @@ abstract class LegacyResource extends Resource
         return auth()->user()?->isSuperAdmin() && (static::definition()['allowDelete'] ?? true) && ! $record->hasDependentRecords();
     }
 
+    /**
+     * Alamat halaman di website yang membaca katalog aktif, misalnya 'blog/slug-artikel'.
+     */
+    public static function websiteLink(string $path): string
+    {
+        $baseUrl = config('heavypack.content_mode') === 'shared'
+            ? config('heavypack.website_url')
+            : config('heavypack.preview_url');
+
+        return rtrim($baseUrl, '/').'/'.ltrim($path, '/');
+    }
+
     public static function form(Schema $schema): Schema
     {
         $definition = static::definition();
