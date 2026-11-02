@@ -153,11 +153,7 @@ class ProdukResource extends LegacyResource
      */
     public static function websiteUrl(Produk $record): string
     {
-        $baseUrl = config('heavypack.content_mode') === 'shared'
-            ? config('heavypack.website_url')
-            : config('heavypack.preview_url');
-
-        return rtrim($baseUrl, '/').'/detail/'.rawurlencode($record->nama_produk).'?record='.$record->getKey();
+        return static::websiteLink('detail/'.rawurlencode($record->nama_produk).'?record='.$record->getKey());
     }
 
     public static function getPages(): array
