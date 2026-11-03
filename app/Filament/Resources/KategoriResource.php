@@ -265,18 +265,22 @@ class KategoriResource extends LegacyResource
 
         $key = Str::lower(static::trimGroup($group));
 
-        return $stored->first(fn (string $existing): bool => Str::lower(static::trimGroup($existing)) === $key)
-            ?? static::trimGroup($group);
+        // Several spellings can match; the one most categories use wins.
+        return $stored->filter(fn (string $existing): bool => Str::lower(static::trimGroup($existing)) === $key)
+            ->countBy()
+            ->sortDesc()
+            ->keys()
+            ->first() ?? static::trimGroup($group);
     }
 
     /**
-     * Every distinct spelling, compared in PHP: MySQL's collation treats "Mesin Sealer" and "Mesin Sealer  " as one value.
+     * Group name of every category, compared in PHP: MySQL's collation treats "Mesin Sealer" and "Mesin Sealer  " as one value.
      *
      * @return Collection<int, string>
      */
     protected static function storedGroupNames(): Collection
     {
-        return Kategori::query()->where('kategori', '!=', '')->pluck('kategori')->unique()->values();
+        return Kategori::query()->where('kategori', '!=', '')->pluck('kategori');
     }
 
     protected static function trimGroup(string $group): string
