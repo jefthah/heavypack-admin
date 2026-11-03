@@ -22,7 +22,12 @@
                     $progress = $metric['progress'] ?? null;
                 @endphp
 
-                <div @class(['hp-metric', 'hp-metric--primary' => $metric['primary'] ?? false, 'hp-metric--link' => filled($metric['url'] ?? null)])>
+                <div @class([
+                    'hp-metric',
+                    'hp-metric--primary' => $metric['primary'] ?? false,
+                    'hp-metric--'.($metric['tone'] ?? '') => filled($metric['tone'] ?? null),
+                    'hp-metric--link' => filled($metric['url'] ?? null),
+                ])>
                     <div class="hp-metric__body">
                         <dt>
                             <span>{{ $metric['label'] }}</span>

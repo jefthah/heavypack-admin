@@ -9,9 +9,14 @@ use Filament\Actions\ActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
-use Filament\Support\Enums\FontWeight;
+use Filament\Forms\Components\Select;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Contracts\HasTable;
+use Filament\Tables\Enums\FiltersLayout;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Support\HtmlString;
+use Illuminate\Support\Str;
 
 class KategoriResource extends LegacyResource
 {
@@ -22,15 +27,15 @@ class KategoriResource extends LegacyResource
     public static function table(Table $table): Table
     {
         return parent::table($table)
-            ->heading('Daftar kategori')
             ->columns([
                 TextColumn::make('id_kategoris')->label('ID')->sortable()->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('submenu')
                     ->label('Nama kategori')
-                    ->description(fn (Kategori $record): string => $record->url_submenu ?: 'Slug belum diisi')
-                    ->icon('heroicon-o-squares-2x2')
-                    ->iconColor('primary')
-                    ->weight(FontWeight::Medium)
+                    ->formatStateUsing(fn (?string $state, Kategori $record): HtmlString => new HtmlString(view('filament.tables.category-name', [
+                        'name' => (string) $state,
+                        'initials' => static::initials((string) $state),
+                        'slug' => $record->url_submenu,
+                    ])->render()))
                     ->searchable(['submenu', 'url_submenu'])
                     ->sortable()
                     ->wrap()
@@ -39,6 +44,10 @@ class KategoriResource extends LegacyResource
                     ->label('Kelompok mesin')
                     ->badge()
                     ->color('gray')
+                    ->url(fn (Kategori $record): string => static::getUrl('index', [
+                        'filters' => ['kategori' => ['value' => $record->kategori]],
+                    ]))
+                    ->tooltip('Tampilkan kategori di kelompok ini saja')
                     ->searchable(['kategori', 'url_kategori'])
                     ->sortable()
                     ->wrap()
@@ -46,39 +55,73 @@ class KategoriResource extends LegacyResource
                 TextColumn::make('products_count')
                     ->label('Produk')
                     ->counts('products')
-                    ->numeric(locale: 'id')
-                    ->suffix(' produk')
+                    ->formatStateUsing(fn (int $state): string => $state > 0
+                        ? number_format($state, 0, ',', '.').' produk'
+                        : 'Belum ada produk')
+                    ->icon(fn (int $state): ?string => $state > 0 ? null : 'heroicon-m-exclamation-triangle')
+                    ->color(fn (int $state): ?string => $state > 0 ? null : 'warning')
                     ->sortable()
-                    ->color('gray')
-                    ->url(fn (Kategori $record): string => ProdukResource::getUrl('index', [
-                        'filters' => ['id_kategori' => ['value' => $record->getKey()]],
-                    ]))
-                    ->tooltip('Lihat produk dalam kategori ini')
-                    ->extraAttributes(['class' => 'hp-category-products']),
+                    ->url(fn (Kategori $record): ?string => $record->products_count > 0
+                        ? ProdukResource::getUrl('index', ['filters' => ['id_kategori' => ['value' => $record->getKey()]]])
+                        : null)
+                    ->tooltip(fn (Kategori $record): string => $record->products_count > 0
+                        ? 'Lihat produk dalam kategori ini'
+                        : 'Kategori ini belum dipakai produk mana pun')
+                    ->extraAttributes(fn (Kategori $record): array => [
+                        'class' => $record->products_count > 0 ? 'hp-category-products' : 'hp-category-products hp-category-products--empty',
+                    ]),
                 TextColumn::make('url_kategori')
                     ->label('Slug kelompok')
                     ->toggleable(isToggledHiddenByDefault: true)
                     ->wrap(),
             ])
+            ->filters([
+                SelectFilter::make('kategori')
+                    ->label('Kelompok mesin')
+                    ->placeholder('Semua kelompok')
+                    ->options(fn (): array => Kategori::query()->where('kategori', '!=', '')->distinct()->orderBy('kategori')->pluck('kategori', 'kategori')->all())
+                    ->searchable()
+                    ->modifyFormFieldUsing(fn (Select $field): Select => $field->hiddenLabel()),
+            ], layout: FiltersLayout::AboveContent)
+            ->filtersFormColumns(1)
+            ->deferFilters(false)
+            ->filtersResetAction(fn (Action $action): Action => $action
+                ->label('Atur ulang')
+                ->icon('heroicon-m-x-mark')
+                ->color('gray')
+                ->hidden(fn (HasTable $livewire): bool => ! $livewire->getTable()->isFiltered()))
             ->searchPlaceholder('Cari nama, kelompok, atau slug...')
-            ->filtersTriggerAction(fn (Action $action): Action => $action
-                ->button()->label('Filter kelompok')->icon('heroicon-m-adjustments-horizontal'))
             ->columnManagerTriggerAction(fn (Action $action): Action => $action
-                ->button()->label('Kolom')->icon('heroicon-m-view-columns'))
+                ->iconButton()->icon('heroicon-m-view-columns')->label('Atur kolom')->tooltip('Atur kolom'))
             ->recordActions([
                 EditAction::make()->label('Edit')->color('gray')->button()->outlined(),
                 ActionGroup::make([
                     ViewAction::make()->label('Lihat detail'),
+                    Action::make('viewOnWebsite')
+                        ->label('Lihat di website')
+                        ->icon('heroicon-m-arrow-top-right-on-square')
+                        ->url(fn (Kategori $record): string => static::websiteLink('produk/'.rawurlencode($record->url_submenu)), shouldOpenInNewTab: true)
+                        ->visible(fn (Kategori $record): bool => filled($record->url_submenu)),
                     DeleteAction::make()
                         ->label('Hapus kategori')
                         ->modalDescription('Hapus kategori ini dari katalog? Kategori yang masih dipakai produk atau sparepart tidak dapat dihapus.'),
                 ])->label('Aksi lainnya')->icon('heroicon-m-ellipsis-horizontal')->tooltip('Aksi lainnya'),
             ])
             ->recordActionsColumnLabel('Aksi')
-            ->defaultPaginationPageOption(10)
+            ->defaultPaginationPageOption(25)
             ->emptyStateIcon('heroicon-o-squares-2x2')
             ->emptyStateHeading('Kategori tidak ditemukan')
-            ->emptyStateDescription('Coba kata kunci atau filter lain, atau tambahkan kategori baru.');
+            ->emptyStateDescription('Coba kata kunci, tab, atau kelompok lain, atau tambahkan kategori baru.');
+    }
+
+    /**
+     * Two-letter mark for the row avatar, e.g. "Double Chamber Vacuum Machine" -> "DC".
+     */
+    public static function initials(string $name): string
+    {
+        return Str::of($name)->squish()->explode(' ')->take(2)
+            ->map(fn (string $word): string => Str::upper(Str::substr($word, 0, 1)))
+            ->implode('');
     }
 
     public static function getPages(): array
