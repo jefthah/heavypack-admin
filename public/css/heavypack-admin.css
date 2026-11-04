@@ -1791,17 +1791,29 @@ a.hp-feed__item:focus-visible .hp-feed__chevron {
 
 /* ---------- Category form: website preview and usage ---------- */
 
-/* The preview stays in view while the description is edited further down. */
+/*
+ * The preview stays in view while the description is edited further down.
+ * On short screens the panel is taller than the window, so it gets its own scroll:
+ * otherwise the Google card at its top scrolls away before the description field is reached.
+ * The 2px padding keeps the section borders from being clipped by the scroll area.
+ */
 @media (min-width: 1024px) {
     .hp-form-aside {
         position: sticky;
         top: 5.5rem;
         align-self: start;
+        max-height: calc(100dvh - 7rem);
+        margin: -2px;
+        padding: 2px;
+        overflow-y: auto;
+        scrollbar-width: thin;
     }
 }
 
+/* minmax(0, 1fr): the one-line URL is cut with an ellipsis instead of widening the panel past the screen. */
 .hp-preview {
     display: grid;
+    grid-template-columns: minmax(0, 1fr);
     gap: 1rem;
 }
 
