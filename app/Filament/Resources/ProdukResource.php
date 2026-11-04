@@ -153,7 +153,9 @@ class ProdukResource extends LegacyResource
      */
     public static function websiteUrl(Produk $record): string
     {
-        return static::websiteLink('detail/'.rawurlencode($record->nama_produk).'?record='.$record->getKey());
+        return filled($record->slug_produk)
+            ? static::websiteLink('detail/'.$record->slug_produk)
+            : static::websiteLink('detail/'.rawurlencode($record->nama_produk).'?record='.$record->getKey());
     }
 
     public static function getPages(): array

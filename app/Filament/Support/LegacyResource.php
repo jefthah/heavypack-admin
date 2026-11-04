@@ -132,6 +132,13 @@ abstract class LegacyResource extends Resource
                 'category' => Select::make($name)->options(fn () => Kategori::orderBy('submenu')->pluck('submenu', 'id_kategoris')->all())->searchable()->preload(),
                 'articleCategory' => Select::make($name)->options(fn () => collect(KategoriArtikel::pluck('kategori'))->merge(Artikel::distinct()->pluck('kategori'))->filter()->unique()->mapWithKeys(fn ($value) => [$value => $value])->all())->searchable(),
                 'galleryToggle' => static::galleryToggle($name, $field['onValue'], $definition['gallery']),
+                'slug' => TextInput::make($name)
+                    ->prefix('/'.$field['path'].'/')
+                    ->regex('/^[a-z0-9]+(?:-[a-z0-9]+)*$/')
+                    ->validationMessages(['regex' => 'Gunakan huruf kecil, angka, dan tanda hubung saja.', 'unique' => 'Alamat ini sudah dipakai data lain.'])
+                    ->unique(ignoreRecord: true)
+                    ->live(onBlur: true)
+                    ->afterStateUpdated(fn (?string $state, Set $set) => $set($name, Str::slug((string) $state))),
                 default => TextInput::make($name),
             };
             $component->label($field['label']);
@@ -166,6 +173,15 @@ abstract class LegacyResource extends Resource
             }
             if (isset($field['note'])) {
                 $component->helperText($field['note']);
+            }
+            // Kolom sumber slug (mis. nama produk) mengisi slug saat data baru dibuat dan slug masih kosong.
+            $slugField = collect($definition['fields'])->first(fn (array $other): bool => $other['type'] === 'slug' && ($other['from'] ?? null) === $name);
+            if ($slugField) {
+                $component->live(onBlur: true)->afterStateUpdated(function (?string $state, Get $get, Set $set, string $operation) use ($slugField): void {
+                    if ($operation === 'create' && blank($get($slugField['name']))) {
+                        $set($slugField['name'], Str::slug((string) $state));
+                    }
+                });
             }
             if (static::$moduleKey === 'artikel' && $name === 'judul') {
                 $component->live(onBlur: true)->afterStateUpdated(function (?string $state, Get $get, Set $set, string $operation): void {

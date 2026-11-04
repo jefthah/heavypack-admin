@@ -18,6 +18,15 @@ return [
             'max' => 200,
             'unique' => true,
         ], [
+            // Kolom dari database/sql/2026_11_04_pengamanan_alamat.sql (repo website).
+            'name' => 'slug_produk',
+            'label' => 'Alamat di website',
+            'type' => 'slug',
+            'path' => 'detail',
+            'from' => 'nama_produk',
+            'max' => 191,
+            'note' => 'Terisi otomatis dari nama. Sebaiknya tidak diubah setelah tayang; bila diubah, alamat lama dialihkan otomatis ke alamat baru.',
+        ], [
             'name' => 'judul_produk',
             'label' => 'Judul produk',
             'type' => 'text',
