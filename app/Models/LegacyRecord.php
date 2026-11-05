@@ -24,9 +24,21 @@ abstract class LegacyRecord extends Model
         $this->table = $definition['table'];
         $this->primaryKey = $definition['pk'];
         foreach ($definition['fields'] as $field) {
-            $this->attributes[$field['name']] = in_array($field['type'], ['number', 'category'], true) ? 0 : '';
+            $this->attributes[$field['name']] = static::emptyValue($field);
         }
         parent::__construct($attributes);
+    }
+
+    /**
+     * Nilai kolom yang belum diisi. Kolom lama database ini NOT NULL tanpa default, jadi tidak boleh NULL.
+     */
+    protected static function emptyValue(array $field): int|string
+    {
+        return match ($field['type']) {
+            'number', 'category', 'toggle' => 0,
+            'options' => $field['default'] ?? array_key_first($field['options']),
+            default => '',
+        };
     }
 
     public static function definition(): array
@@ -58,7 +70,7 @@ abstract class LegacyRecord extends Model
         static::saving(function (self $record): void {
             foreach (static::definition()['fields'] as $field) {
                 if ($record->getAttribute($field['name']) === null) {
-                    $record->setAttribute($field['name'], in_array($field['type'], ['number', 'category'], true) ? 0 : '');
+                    $record->setAttribute($field['name'], static::emptyValue($field));
                 }
             }
             if ($record->exists && Schema::connection('catalog')->hasColumn($record->getTable(), 'updated_at')) {

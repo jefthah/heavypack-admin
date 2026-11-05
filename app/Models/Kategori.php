@@ -27,6 +27,17 @@ class Kategori extends LegacyRecord
     {
         parent::booted();
 
+        // Teks "Kelompok kategori" selalu sama dengan nama Menu katalog yang dipilih
+        // (tampil sebagai label kartu produk di beranda website).
+        static::saving(function (self $kategori): void {
+            $menu = Menu::query()->where('url_menu', $kategori->url_kategori)->value('menu');
+            if (filled($menu)) {
+                $kategori->kategori = trim($menu);
+            } elseif (blank($kategori->kategori)) {
+                $kategori->kategori = (string) $kategori->url_kategori;
+            }
+        });
+
         // Slug diganti: alamat lama dialihkan ke alamat baru. Untuk halaman bersama (kelompok, sparepart)
         // hanya bila tidak ada kategori lain yang masih memakai slug lama, karena halamannya masih ada.
         static::updated(function (self $kategori): void {

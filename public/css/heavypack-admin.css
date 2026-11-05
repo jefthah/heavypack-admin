@@ -2555,3 +2555,15 @@ a.hp-usage__count:focus-visible {
         transform: none;
     }
 }
+
+/* Tautan di teks bantuan form, misalnya "Menu katalog" di bawah pilihan Kelompok. */
+.hp-helper-link {
+    color: var(--hp-accent-text);
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+.hp-helper-link:hover {
+    color: var(--hp-orange-dark);
+}

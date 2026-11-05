@@ -30,6 +30,7 @@ class PengalihanResource extends Resource
 
     private const SUMBER = [
         'kategori' => 'Slug kategori diubah',
+        'menu' => 'Slug menu diubah',
         'produk' => 'Slug produk diubah',
         'perbaikan' => 'Perbaikan alamat',
         'manual' => 'Ditambah manual',

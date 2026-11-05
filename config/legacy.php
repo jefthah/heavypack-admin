@@ -148,6 +148,11 @@ return [
             'required' => true,
             'max' => 200,
         ], [
+            'name' => 'urutan',
+            'label' => 'Urutan di kelompok',
+            'type' => 'number',
+            'default' => 'next',
+        ], [
             'name' => 'url_submenu',
             'label' => 'Slug kategori',
             'type' => 'text',
@@ -345,18 +350,39 @@ return [
         'title' => 'menu',
         'group' => 'Konten',
         'icon' => 'heroicon-o-bars-3',
+        // Menu katalog = kelompok mesin di website: filter samping, label kartu produk di beranda,
+        // dan halaman /product/{slug}. Kategori mesin memilih kelompoknya dari daftar ini.
         'fields' => [[
             'name' => 'menu',
             'label' => 'Nama menu',
             'type' => 'text',
             'required' => true,
             'max' => 100,
+            'note' => 'Nama kelompok di filter website, di label kartu produk beranda, dan di halaman kelompok. Bila diubah, kelompok di semua kategorinya ikut berubah.',
         ], [
             'name' => 'url_menu',
             'label' => 'Slug menu',
-            'type' => 'text',
+            'type' => 'slug',
+            'path' => 'product',
             'required' => true,
-            'max' => 100,
+            'note' => 'Alamat halaman kelompok. Bila diubah, semua kategorinya ikut pindah dan alamat lama dialihkan otomatis.',
+        ], [
+            'name' => 'brand',
+            'label' => 'Brand di filter',
+            'type' => 'options',
+            'options' => ['heavypack' => 'Heavypack (mesin kemasan)', 'heavypro' => 'Heavypro (pengolahan makanan)'],
+            'default' => 'heavypack',
+        ], [
+            'name' => 'industri',
+            'label' => 'Juga di Heavypack Industries',
+            'type' => 'toggle',
+            'note' => 'Tampilkan kelompok ini juga saat pengunjung memilih brand Heavypack Industries (mesin otomasi dan lini industri).',
+        ], [
+            'name' => 'urutan',
+            'label' => 'Urutan di filter',
+            'type' => 'number',
+            'default' => 'next',
+            'note' => 'Angka kecil tampil lebih dulu. Kelompok yang belum punya kategori berisi produk tidak tampil di filter.',
         ], [
             'name' => 'judul',
             'label' => 'Judul halaman',
@@ -367,7 +393,21 @@ return [
             'label' => 'Deskripsi',
             'type' => 'textarea',
         ]],
-        'columns' => ['menu', 'url_menu', 'judul'],
+        'columns' => ['urutan', 'menu', 'url_menu', 'brand', 'industri'],
+        'sort' => 'urutan',
+        'sortDirection' => 'asc',
+        // Kelompok yang masih dipakai kategori tidak bisa dihapus; slug yang diganti ikut diteruskan.
+        'references' => [[
+            'table' => 'kategoris',
+            'column' => 'url_kategori',
+            'value' => 'url_menu',
+            'propagate' => true,
+        ], [
+            'table' => 'keywords',
+            'column' => 'kategori',
+            'value' => 'url_menu',
+            'propagate' => true,
+        ]],
     ],
     'keyword' => [
         'model' => 'Keyword',
