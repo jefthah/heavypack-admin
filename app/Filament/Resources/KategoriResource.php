@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Support\LegacyResource;
 use App\Models\Kategori;
+use App\Models\Menu;
 use App\Models\Sparepart;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
@@ -24,7 +25,6 @@ use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Enums\FiltersLayout;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
-use Illuminate\Support\Collection;
 use Illuminate\Support\HtmlString;
 use Illuminate\Support\Str;
 
@@ -49,13 +49,13 @@ class KategoriResource extends LegacyResource
                 Section::make('Informasi kategori')
                     ->description('Nama yang tampil di menu dan katalog website.')
                     ->schema([
-                        TextInput::make('kategori')
-                            ->label('Kelompok kategori')
+                        Select::make('url_kategori')
+                            ->label('Kelompok')
+                            ->options(fn (?Kategori $record): array => static::groupOptions($record))
                             ->required()
-                            ->maxLength(200)
-                            ->datalist(fn (): array => static::groupNames())
-                            ->dehydrateStateUsing(fn (?string $state): string => static::existingGroupName((string) $state))
-                            ->helperText('Pilih kelompok yang sudah ada agar kategori ini tampil bersama kategori sejenis.'),
+                            ->searchable()
+                            ->preload()
+                            ->helperText(new HtmlString('Daftar dari <a href="'.e(MenuResource::getUrl('index')).'" class="hp-helper-link">Menu katalog</a>. Nama, brand, dan urutan kelompok diatur di sana.')),
                         TextInput::make('submenu')
                             ->label('Nama kategori')
                             ->required()
@@ -66,6 +66,13 @@ class KategoriResource extends LegacyResource
                                     $set('url_submenu', Str::slug((string) $state));
                                 }
                             }),
+                        TextInput::make('urutan')
+                            ->label('Urutan di kelompok')
+                            ->numeric()
+                            ->integer()
+                            ->minValue(0)
+                            ->default(fn (): int => (int) Kategori::query()->max('urutan') + 1)
+                            ->helperText('Urutan di filter dan tombol jenis mesin di website. Angka kecil tampil lebih dulu. Kategori tanpa produk tidak tampil di filter.'),
                     ])
                     ->columns(2),
                 Section::make('Alamat di website')
@@ -75,9 +82,6 @@ class KategoriResource extends LegacyResource
                             ->unique(ignoreRecord: true)
                             ->validationMessages(['unique' => 'Slug ini sudah dipakai kategori lain.'])
                             ->helperText('Alamat halaman kategori ini. Harus berbeda dari kategori lain.'),
-                        static::slugInput('url_kategori', 'Slug kelompok', 'product')
-                            ->required()
-                            ->helperText('Halaman kelompok tempat kategori ini ikut tampil.'),
                         static::slugInput('url_sparepart', 'Slug sparepart', 'sparepart')
                             ->helperText('Boleh sama dengan kategori lain; sparepart-nya lalu tampil di satu halaman. Kosongkan bila belum ada.'),
                     ]),
@@ -236,56 +240,21 @@ class KategoriResource extends LegacyResource
     }
 
     /**
-     * Existing machine groups, trimmed, for the group field's suggestions.
+     * Kelompok yang bisa dipilih: Menu katalog menurut urutan filter. Kelompok lama yang belum
+     * terdaftar di Menu katalog tetap tersedia untuk kategori yang memakainya, supaya tidak hilang saat disimpan.
      *
-     * @return array<int, string>
+     * @return array<string, string>
      */
-    public static function groupNames(): array
+    public static function groupOptions(?Kategori $record = null): array
     {
-        return static::storedGroupNames()
-            ->map(fn (string $group): string => static::trimGroup($group))
-            ->unique()
-            ->sort()
-            ->values()
-            ->all();
-    }
+        $options = Menu::options();
+        $current = (string) $record?->url_kategori;
 
-    /**
-     * Legacy group names carry trailing spaces ("Mesin Sealer  ", "Mesin Filling" + a non-breaking space).
-     * A stored spelling is kept as it is; a newly typed name reuses the stored spelling instead of
-     * starting a second group that only differs in spacing or case.
-     */
-    public static function existingGroupName(string $group): string
-    {
-        $stored = static::storedGroupNames();
-
-        if ($stored->contains(fn (string $existing): bool => $existing === $group)) {
-            return $group;
+        if ($current !== '' && ! array_key_exists($current, $options)) {
+            $options[$current] = (trim((string) $record->kategori) ?: $current).' (belum ada di Menu katalog)';
         }
 
-        $key = Str::lower(static::trimGroup($group));
-
-        // Several spellings can match; the one most categories use wins.
-        return $stored->filter(fn (string $existing): bool => Str::lower(static::trimGroup($existing)) === $key)
-            ->countBy()
-            ->sortDesc()
-            ->keys()
-            ->first() ?? static::trimGroup($group);
-    }
-
-    /**
-     * Group name of every category, compared in PHP: MySQL's collation treats "Mesin Sealer" and "Mesin Sealer  " as one value.
-     *
-     * @return Collection<int, string>
-     */
-    protected static function storedGroupNames(): Collection
-    {
-        return Kategori::query()->where('kategori', '!=', '')->pluck('kategori');
-    }
-
-    protected static function trimGroup(string $group): string
-    {
-        return preg_replace('/^[\s\x{00A0}]+|[\s\x{00A0}]+$/u', '', $group);
+        return $options;
     }
 
     /**

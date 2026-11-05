@@ -18,7 +18,7 @@
                 <span @class(['hp-dot', 'hp-dot--testing' => ! $isSharedCatalog]) aria-hidden="true"></span>
                 <span>
                     <strong>{{ $environmentLabel }}</strong>
-                    · {{ $isSharedCatalog ? 'Perubahan konten langsung digunakan website lokal.' : 'Perubahan tersimpan di katalog pengujian.' }}
+                    · {{ $isSharedCatalog ? 'Perubahan konten langsung tampil di website.' : 'Perubahan tersimpan di katalog pengujian.' }}
                 </span>
             </p>
         </div>

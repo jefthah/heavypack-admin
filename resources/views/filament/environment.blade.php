@@ -9,7 +9,7 @@
         <div>
             <p class="hp-env-card__title">{{ config('heavypack.environment_label') }}</p>
             <p class="hp-env-card__text">
-                {{ $isSharedCatalog ? 'Perubahan konten langsung digunakan website lokal.' : 'Perubahan tersimpan di katalog pengujian.' }}
+                {{ $isSharedCatalog ? 'Perubahan konten langsung tampil di website.' : 'Perubahan tersimpan di katalog pengujian.' }}
             </p>
         </div>
     </div>

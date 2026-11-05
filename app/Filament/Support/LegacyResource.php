@@ -132,6 +132,8 @@ abstract class LegacyResource extends Resource
                 'category' => Select::make($name)->options(fn () => Kategori::orderBy('submenu')->pluck('submenu', 'id_kategoris')->all())->searchable()->preload(),
                 'articleCategory' => Select::make($name)->options(fn () => collect(KategoriArtikel::pluck('kategori'))->merge(Artikel::distinct()->pluck('kategori'))->filter()->unique()->mapWithKeys(fn ($value) => [$value => $value])->all())->searchable(),
                 'galleryToggle' => static::galleryToggle($name, $field['onValue'], $definition['gallery']),
+                'options' => Select::make($name)->options($field['options'])->selectablePlaceholder(false)->default($field['default'] ?? array_key_first($field['options'])),
+                'toggle' => Toggle::make($name)->onColor('primary')->default(false)->dehydrateStateUsing(fn (mixed $state): int => $state ? 1 : 0),
                 'slug' => TextInput::make($name)
                     ->prefix('/'.$field['path'].'/')
                     ->regex('/^[a-z0-9]+(?:-[a-z0-9]+)*$/')
@@ -150,7 +152,8 @@ abstract class LegacyResource extends Resource
                 $component->maxLength($field['max']);
             }
             if ($field['type'] === 'number') {
-                $component->numeric()->default(0)->minValue($field['min'] ?? 0);
+                // 'next' = nomor setelah yang terbesar, misalnya urutan: data baru tampil paling akhir.
+                $component->numeric()->default(($field['default'] ?? null) === 'next' ? fn (): int => (int) static::getModel()::query()->max($name) + 1 : 0)->minValue($field['min'] ?? 0);
                 if (isset($field['maxValue'])) {
                     $component->maxValue($field['maxValue']);
                 }
@@ -259,6 +262,12 @@ abstract class LegacyResource extends Resource
             if ($field['type'] === 'galleryToggle') {
                 $entry->getStateUsing(fn (Model $record): string => filled($record->getAttribute($field['name'])) ? 'Ya' : 'Tidak');
             }
+            if ($field['type'] === 'toggle') {
+                $entry->getStateUsing(fn (Model $record): string => $record->getAttribute($field['name']) ? 'Ya' : 'Tidak');
+            }
+            if ($field['type'] === 'options') {
+                $entry->formatStateUsing(fn (?string $state): string => $field['options'][$state] ?? (string) $state);
+            }
             $entries[] = $entry;
         }
 
@@ -283,6 +292,13 @@ abstract class LegacyResource extends Resource
             if ($name === 'created_at') {
                 $column->dateTime('d M Y H:i');
             }
+            $field = collect($definition['fields'])->firstWhere('name', $name);
+            if (($field['type'] ?? null) === 'options') {
+                $column->formatStateUsing(fn (?string $state): string => $field['options'][$state] ?? (string) $state)->badge()->color('gray');
+            }
+            if (($field['type'] ?? null) === 'toggle') {
+                $column->formatStateUsing(fn ($state): string => $state ? 'Ya' : 'Tidak')->searchable(false);
+            }
             $columns[] = $column;
         }
         $filters = [];
@@ -303,7 +319,7 @@ abstract class LegacyResource extends Resource
         }
 
         return $table->columns($columns)->filters($filters)->recordActions($actions)
-            ->defaultSort($definition['pk'], $definition['sortDirection'] ?? 'desc')->paginated([10, 25, 50, 100])->defaultPaginationPageOption(25)
+            ->defaultSort($definition['sort'] ?? $definition['pk'], $definition['sortDirection'] ?? 'desc')->paginated([10, 25, 50, 100])->defaultPaginationPageOption(25)
             ->emptyStateHeading('Belum ada data')->emptyStateDescription('Data akan muncul di sini setelah ditambahkan atau diterima melalui website.');
     }
 }
