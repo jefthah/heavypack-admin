@@ -351,7 +351,7 @@ return [
         'group' => 'Konten',
         'icon' => 'heroicon-o-bars-3',
         // Menu katalog = kelompok mesin di website: filter samping, label kartu produk di beranda,
-        // dan halaman /product/{slug}. Kategori mesin memilih kelompoknya dari daftar ini.
+        // dan halaman /mesin/{slug}. Kategori mesin memilih kelompoknya dari daftar ini.
         'fields' => [[
             'name' => 'menu',
             'label' => 'Nama menu',
@@ -363,9 +363,9 @@ return [
             'name' => 'url_menu',
             'label' => 'Slug menu',
             'type' => 'slug',
-            'path' => 'product',
+            'path' => 'mesin',
             'required' => true,
-            'note' => 'Alamat halaman kelompok. Bila diubah, semua kategorinya ikut pindah dan alamat lama dialihkan otomatis.',
+            'note' => 'Alamat halaman kelompok, juga awal alamat semua kategorinya (/mesin/{slug}/{kategori}). Bila diubah, semua kategorinya ikut pindah dan alamat lama dialihkan otomatis.',
         ], [
             'name' => 'brand',
             'label' => 'Brand di filter',

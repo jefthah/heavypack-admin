@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
- * Menu katalog = kelompok mesin di website (filter, label kartu beranda, halaman /product/{url_menu}).
+ * Menu katalog = kelompok mesin di website (filter, label kartu beranda, halaman /mesin/{url_menu}).
  */
 class Menu extends LegacyRecord
 {
@@ -44,8 +44,19 @@ class Menu extends LegacyRecord
             }
 
             $lama = trim((string) $menu->getOriginal('url_menu'));
-            if ($menu->wasChanged('url_menu') && $lama !== '') {
-                Pengalihan::catat('/product/'.$lama, '/product/'.$menu->url_menu, 'menu');
+            $baru = trim((string) $menu->url_menu);
+            if ($menu->wasChanged('url_menu') && $lama !== '' && $baru !== '') {
+                Pengalihan::catat('/mesin/'.$lama, '/mesin/'.$baru, 'menu');
+
+                // Halaman kategorinya ikut pindah (/mesin/{kelompok}/{kategori}); kategoris.url_kategori
+                // sudah diteruskan ke slug baru oleh references 'propagate' di parent::booted().
+                foreach (Kategori::query()->where('url_kategori', $baru)->pluck('url_submenu') as $slug) {
+                    $dari = Kategori::alamat($lama, (string) $slug);
+                    $ke = Kategori::alamat($baru, (string) $slug);
+                    if ($dari && $ke) {
+                        Pengalihan::catat('/'.$dari, '/'.$ke, 'menu');
+                    }
+                }
             }
         });
     }

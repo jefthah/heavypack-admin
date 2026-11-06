@@ -55,6 +55,8 @@ class KategoriResource extends LegacyResource
                             ->required()
                             ->searchable()
                             ->preload()
+                            // Alamat kategori ikut kelompoknya (/mesin/{kelompok}/{kategori}): pratinjau diperbarui.
+                            ->live()
                             ->helperText(new HtmlString('Daftar dari <a href="'.e(MenuResource::getUrl('index')).'" class="hp-helper-link">Menu katalog</a>. Nama, brand, dan urutan kelompok diatur di sana.')),
                         TextInput::make('submenu')
                             ->label('Nama kategori')
@@ -78,10 +80,11 @@ class KategoriResource extends LegacyResource
                 Section::make('Alamat di website')
                     ->description('Bagian akhir alamat halaman. Spasi dan huruf besar dirapikan otomatis saat kolom ditinggalkan.')
                     ->schema([
-                        static::slugInput('url_submenu', 'Slug kategori', 'produk')
+                        static::slugInput('url_submenu', 'Slug kategori', 'mesin')
+                            ->prefix(fn (Get $get): string => '/mesin/'.(trim((string) $get('url_kategori')) ?: '…').'/')
                             ->unique(ignoreRecord: true)
                             ->validationMessages(['unique' => 'Slug ini sudah dipakai kategori lain.'])
-                            ->helperText('Alamat halaman kategori ini. Harus berbeda dari kategori lain.'),
+                            ->helperText('Alamat halaman kategori ini, di bawah alamat kelompoknya. Harus berbeda dari kategori lain. Bila slug atau kelompok diganti, alamat lama dialihkan otomatis.'),
                         static::slugInput('url_sparepart', 'Slug sparepart', 'sparepart')
                             ->helperText('Boleh sama dengan kategori lain; sparepart-nya lalu tampil di satu halaman. Kosongkan bila belum ada.'),
                     ]),
@@ -109,6 +112,7 @@ class KategoriResource extends LegacyResource
                         View::make('filament.forms.category-preview')
                             ->viewData(fn (Get $get): array => static::previewData(
                                 (string) $get('submenu'),
+                                (string) $get('url_kategori'),
                                 (string) $get('url_submenu'),
                                 (string) $get('judul'),
                                 (string) $get('deskripsi'),
@@ -135,6 +139,7 @@ class KategoriResource extends LegacyResource
                         'name' => (string) $state,
                         'initials' => static::initials((string) $state),
                         'slug' => $record->url_submenu,
+                        'group' => trim((string) $record->url_kategori),
                     ])->render()))
                     ->searchable(['submenu', 'url_submenu'])
                     ->sortable()
@@ -200,8 +205,8 @@ class KategoriResource extends LegacyResource
                     Action::make('viewOnWebsite')
                         ->label('Lihat di website')
                         ->icon('heroicon-m-arrow-top-right-on-square')
-                        ->url(fn (Kategori $record): string => static::websiteLink('produk/'.rawurlencode($record->url_submenu)), shouldOpenInNewTab: true)
-                        ->visible(fn (Kategori $record): bool => filled($record->url_submenu)),
+                        ->url(fn (Kategori $record): string => static::websiteLink((string) $record->alamatWebsite()), shouldOpenInNewTab: true)
+                        ->visible(fn (Kategori $record): bool => $record->alamatWebsite() !== null),
                     DeleteAction::make()
                         ->label('Hapus kategori')
                         ->modalDescription('Hapus kategori ini dari katalog? Kategori yang masih dipakai produk atau sparepart tidak dapat dihapus.'),
@@ -270,15 +275,17 @@ class KategoriResource extends LegacyResource
      *
      * @return array<string, string|null>
      */
-    public static function previewData(string $name, string $slug, string $title, string $description): array
+    public static function previewData(string $name, string $group, string $slug, string $title, string $description): array
     {
-        $url = filled($slug) ? static::websiteLink('produk/'.$slug) : null;
-        $site = static::websiteLink('produk');
+        $path = Kategori::alamat($group, $slug);
+        $url = $path ? static::websiteLink($path) : null;
+        $site = static::websiteLink('mesin');
         $text = static::plainText($description);
 
         return [
             'url' => $url,
             'host' => parse_url($site, PHP_URL_HOST).(parse_url($site, PHP_URL_PORT) ? ':'.parse_url($site, PHP_URL_PORT) : ''),
+            'group' => trim($group),
             'slug' => $slug,
             'name' => trim($name),
             'title' => filled($title) ? Str::limit(trim($title).static::TITLE_SUFFIX, 60) : null,
@@ -299,7 +306,7 @@ class KategoriResource extends LegacyResource
             'productsUrl' => ProdukResource::getUrl('index', ['filters' => ['id_kategori' => ['value' => $record->getKey()]]]),
             'spareparts' => Sparepart::where('id_kategori', $record->getKey())->count(),
             'sparepartsUrl' => SparepartResource::getUrl('index', ['filters' => ['id_kategori' => ['value' => $record->getKey()]]]),
-            'websiteUrl' => filled($record->url_submenu) ? static::websiteLink('produk/'.rawurlencode($record->url_submenu)) : null,
+            'websiteUrl' => $record->alamatWebsite() ? static::websiteLink($record->alamatWebsite()) : null,
         ];
     }
 

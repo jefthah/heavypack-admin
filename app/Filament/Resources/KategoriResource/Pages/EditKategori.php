@@ -20,8 +20,8 @@ class EditKategori extends EditLegacyRecord
                 ->icon('heroicon-m-arrow-top-right-on-square')
                 ->color('gray')
                 ->outlined()
-                ->url(fn (Kategori $record): string => KategoriResource::websiteLink('produk/'.rawurlencode($record->url_submenu)), shouldOpenInNewTab: true)
-                ->visible(fn (Kategori $record): bool => filled($record->url_submenu)),
+                ->url(fn (Kategori $record): string => KategoriResource::websiteLink((string) $record->alamatWebsite()), shouldOpenInNewTab: true)
+                ->visible(fn (Kategori $record): bool => $record->alamatWebsite() !== null),
             // Outlined so the destructive action is not the loudest button on the page.
             DeleteAction::make()
                 ->label('Hapus')

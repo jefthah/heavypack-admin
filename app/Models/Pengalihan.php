@@ -47,7 +47,7 @@ class Pengalihan extends Model
     }
 
     /**
-     * Catat bahwa $dari kini pindah ke $ke, misalnya ('/produk/slug-lama', '/produk/slug-baru').
+     * Catat bahwa $dari kini pindah ke $ke, misalnya ('/mesin/kelompok/slug-lama', '/mesin/kelompok/slug-baru').
      *
      * - Pengalihan lain yang menuju $dari ikut diarahkan ke $ke, jadi tidak ada rantai dua lompatan.
      * - Pengalihan dari $ke dihapus: alamat itu kini halaman sungguhan lagi (slug dikembalikan).
