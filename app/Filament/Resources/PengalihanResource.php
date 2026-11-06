@@ -33,6 +33,7 @@ class PengalihanResource extends Resource
         'menu' => 'Slug menu diubah',
         'produk' => 'Slug produk diubah',
         'perbaikan' => 'Perbaikan alamat',
+        'paket3' => 'Alamat katalog /mesin (Nov 2026)',
         'manual' => 'Ditambah manual',
     ];
 

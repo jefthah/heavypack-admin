@@ -7,7 +7,7 @@
 
             <span class="hp-serp__source">
                 <span class="hp-serp__name">Heavypack Indonesia</span>
-                <span class="hp-serp__url">{{ $host }} › produk › {{ filled($slug) ? $slug : '…' }}</span>
+                <span class="hp-serp__url">{{ $host }} › mesin › {{ filled($group ?? null) ? $group : '…' }} › {{ filled($slug) ? $slug : '…' }}</span>
             </span>
         </div>
 
