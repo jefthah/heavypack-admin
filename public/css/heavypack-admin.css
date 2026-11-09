@@ -1540,6 +1540,11 @@ a.hp-feed__item:focus-visible .hp-feed__chevron {
     display: none;
 }
 
+/* Kecuali tombol "Susun ulang" (Kategori mesin, setelah satu kelompok dipilih). */
+.hp-list .fi-ta-header-toolbar > .fi-ta-actions:has([wire\:click="toggleTableReordering"]) {
+    display: flex;
+}
+
 .hp-list .fi-ta-header-toolbar > div:last-child {
     width: 100%;
     gap: 0.625rem;
@@ -1600,7 +1605,7 @@ a.hp-feed__item:focus-visible .hp-feed__chevron {
 /* ---------- Machine categories ---------- */
 
 /* Summary as separate KPI cards: label and icon on top, the number below, an optional link at the foot. */
-.hp-categories .hp-overview {
+:is(.hp-categories, .hp-menus) .hp-overview {
     grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 1rem;
     overflow: visible;
@@ -1609,7 +1614,7 @@ a.hp-feed__item:focus-visible .hp-feed__chevron {
     box-shadow: none;
 }
 
-.hp-categories .hp-metric {
+:is(.hp-categories, .hp-menus) .hp-metric {
     align-items: flex-start;
     padding: 1.25rem;
     border-radius: 1rem;
@@ -1618,40 +1623,40 @@ a.hp-feed__item:focus-visible .hp-feed__chevron {
     transition: box-shadow 0.2s, transform 0.3s var(--hp-ease);
 }
 
-.hp-categories .hp-metric + .hp-metric {
+:is(.hp-categories, .hp-menus) .hp-metric + .hp-metric {
     border-inline-start: 0;
 }
 
-.hp-categories .hp-metric--link:hover {
+:is(.hp-categories, .hp-menus) .hp-metric--link:hover {
     background-color: var(--hp-card);
     box-shadow: 0 0 0 1px var(--hp-line), var(--hp-shadow-hover);
     transform: translateY(-2px);
 }
 
-.hp-categories .hp-metric dt {
+:is(.hp-categories, .hp-menus) .hp-metric dt {
     min-height: 2.5rem;
     align-items: center;
     font-size: 0.8125rem;
 }
 
-.hp-categories .hp-metric dd {
+:is(.hp-categories, .hp-menus) .hp-metric dd {
     margin-block-start: 0.25rem;
 }
 
-.hp-categories .hp-metric__value {
+:is(.hp-categories, .hp-menus) .hp-metric__value {
     font-size: 2rem;
 }
 
-.hp-categories .hp-metric__note,
-.hp-categories .hp-metric__link {
+:is(.hp-categories, .hp-menus) .hp-metric__note,
+:is(.hp-categories, .hp-menus) .hp-metric__link {
     margin-block-start: 0.75rem;
 }
 
-.hp-categories .hp-metric__link::after {
+:is(.hp-categories, .hp-menus) .hp-metric__link::after {
     border-radius: inherit;
 }
 
-.hp-categories .hp-metric__icon {
+:is(.hp-categories, .hp-menus) .hp-metric__icon {
     width: 2.5rem;
     height: 2.5rem;
 }
@@ -2345,7 +2350,7 @@ a.hp-usage__count:focus-visible {
 }
 
 @media (max-width: 1199px) {
-    .hp-categories .hp-overview {
+    :is(.hp-categories, .hp-menus) .hp-overview {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 }
@@ -2404,30 +2409,30 @@ a.hp-usage__count:focus-visible {
         display: none;
     }
 
-    .hp-categories .hp-overview {
+    :is(.hp-categories, .hp-menus) .hp-overview {
         grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 0.75rem;
     }
 
-    .hp-categories .hp-metric {
+    :is(.hp-categories, .hp-menus) .hp-metric {
         padding: 1rem;
     }
 
-    .hp-categories .hp-metric + .hp-metric {
+    :is(.hp-categories, .hp-menus) .hp-metric + .hp-metric {
         border-block-start: 0;
     }
 
-    .hp-categories .hp-metric dt {
+    :is(.hp-categories, .hp-menus) .hp-metric dt {
         min-height: 0;
         font-size: 0.75rem;
     }
 
-    .hp-categories .hp-metric__icon,
-    .hp-categories .hp-metric__note {
+    :is(.hp-categories, .hp-menus) .hp-metric__icon,
+    :is(.hp-categories, .hp-menus) .hp-metric__note {
         display: none;
     }
 
-    .hp-categories .hp-metric__link {
+    :is(.hp-categories, .hp-menus) .hp-metric__link {
         margin-block-start: 0.5rem;
     }
 
@@ -2539,7 +2544,7 @@ a.hp-usage__count:focus-visible {
     .hp-feed__more .fi-icon,
     .hp-metric__link .fi-icon,
     .hp-metric__progress > span,
-    .hp-categories .hp-metric,
+    :is(.hp-categories, .hp-menus) .hp-metric,
     .hp-category-title__mark,
     .fi-btn,
     .fi-topbar .fi-icon-btn,
@@ -2551,7 +2556,7 @@ a.hp-usage__count:focus-visible {
     .hp-action:focus-visible,
     a.hp-stat:hover,
     a.hp-stat:focus-visible,
-    .hp-categories .hp-metric--link:hover {
+    :is(.hp-categories, .hp-menus) .hp-metric--link:hover {
         transform: none;
     }
 }
@@ -2566,4 +2571,289 @@ a.hp-usage__count:focus-visible {
 
 .hp-helper-link:hover {
     color: var(--hp-orange-dark);
+}
+
+/* ---------- Menu katalog: daftar ringkas per brand, baris langsung diseret ---------- */
+
+/* Petunjuk netral di bawah tab (bukan peringatan). */
+.hp-table-notice--hint .fi-icon {
+    color: var(--hp-icon);
+}
+
+.hp-mk {
+    overflow: hidden;
+    border-radius: 1rem;
+    background: var(--hp-card);
+    box-shadow: 0 0 0 1px var(--hp-line), var(--hp-shadow-sm);
+}
+
+.hp-mk > .hp-table-tabs {
+    margin: 0;
+    padding-block-end: 0.25rem;
+}
+
+.hp-mk-list {
+    display: grid;
+    gap: 0.5rem;
+    margin: 0;
+    padding: 0.75rem 1.25rem 1.25rem;
+    list-style: none;
+}
+
+/* Satu kelompok: pegangan, posisi, nama dan alamat, isi, status, aksi. */
+.hp-mk-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    min-height: 3.75rem;
+    padding: 0.5rem 0.75rem 0.5rem 0.375rem;
+    border-radius: 0.875rem;
+    background: var(--hp-raised);
+    box-shadow: inset 0 0 0 1px var(--hp-line);
+    transition: box-shadow 0.2s, background-color 0.2s;
+}
+
+.hp-mk-row:hover {
+    box-shadow: inset 0 0 0 1px var(--hp-orange-ring);
+}
+
+.hp-mk-grip {
+    display: grid;
+    flex-shrink: 0;
+    place-items: center;
+    width: 2rem;
+    height: 2.5rem;
+    padding: 0;
+    border: 0;
+    border-radius: 0.5rem;
+    background: none;
+    color: var(--hp-icon);
+    cursor: grab;
+    touch-action: none;
+}
+
+.hp-mk-grip svg {
+    width: 1rem;
+    height: 1rem;
+    fill: currentColor;
+}
+
+.hp-mk-grip:hover {
+    background: var(--hp-hover);
+    color: var(--hp-text);
+}
+
+.hp-mk-grip:active {
+    cursor: grabbing;
+}
+
+.hp-mk-grip:focus-visible {
+    outline: 2px solid var(--hp-orange);
+    outline-offset: 2px;
+}
+
+/* Posisi = urutan yang dilihat pengunjung di filter website. */
+.hp-mk-pos {
+    flex-shrink: 0;
+    width: 1.5rem;
+    color: var(--hp-text-muted);
+    font-size: 1rem;
+    font-variant-numeric: tabular-nums;
+    font-weight: 700;
+    text-align: end;
+    transition: color 0.2s;
+}
+
+.hp-mk-row:hover .hp-mk-pos {
+    color: var(--hp-accent-text);
+}
+
+.hp-mk-name {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 0.125rem;
+    min-width: 0;
+    padding-inline-start: 0.25rem;
+}
+
+.hp-mk-title {
+    color: var(--hp-text);
+    font-size: 0.875rem;
+    font-weight: 600;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+}
+
+a.hp-mk-title:hover,
+a.hp-mk-title:focus-visible {
+    color: var(--hp-accent-text);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+.hp-mk-sub {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.25rem 0.5rem;
+    color: var(--hp-text-muted);
+    font-size: 0.75rem;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+}
+
+.hp-menu-chip {
+    display: inline-flex;
+    padding: 0.0625rem 0.5rem;
+    border-radius: 999px;
+    box-shadow: inset 0 0 0 1px var(--hp-line);
+    color: var(--hp-text-muted);
+    font-size: 0.6875rem;
+    font-weight: 500;
+    line-height: 1.5;
+    white-space: nowrap;
+}
+
+/* Isi: "3 jenis · 11 mesin", mengarah ke jenis-jenisnya di Kategori mesin. */
+.hp-mk-meta {
+    flex-shrink: 0;
+    color: var(--hp-text-muted);
+    font-size: 0.8125rem;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+a.hp-mk-meta:hover,
+a.hp-mk-meta:focus-visible {
+    color: var(--hp-accent-text);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+.hp-mk-meta__warn {
+    color: #8a4b05;
+}
+
+.dark .hp-mk-meta__warn {
+    color: #fcd34d;
+}
+
+/* Di website: tampil (hijau) atau belum tampil (pil kuning). */
+.hp-mk-status {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    gap: 0.375rem;
+    min-width: 6.75rem;
+    color: #15803d;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.dark .hp-mk-status {
+    color: #4ade80;
+}
+
+.hp-mk-status .fi-icon {
+    width: 1rem;
+    height: 1rem;
+}
+
+.hp-mk-status--off {
+    min-width: 0;
+    padding: 0.1875rem 0.625rem 0.1875rem 0.5rem;
+    border-radius: 999px;
+    background: #fdf1cf;
+    color: #8a4b05;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.dark .hp-mk-status--off {
+    background: rgba(251, 191, 36, 0.14);
+    color: #fcd34d;
+}
+
+.hp-mk-more {
+    flex-shrink: 0;
+}
+
+/* Saat diseret (wire:sort memakai SortableJS). */
+.hp-mk-list .sortable-chosen {
+    background: var(--hp-card);
+    box-shadow: inset 0 0 0 1px var(--hp-orange-ring), var(--hp-shadow-hover);
+}
+
+.hp-mk-list .sortable-ghost {
+    opacity: 0.4;
+}
+
+.hp-mk-empty {
+    display: grid;
+    justify-items: center;
+    gap: 0.5rem;
+    padding: 3rem 1.5rem;
+    color: var(--hp-text-muted);
+    text-align: center;
+}
+
+.hp-mk-empty .fi-icon {
+    width: 2rem;
+    height: 2rem;
+    color: var(--hp-icon);
+}
+
+.hp-mk-empty h2 {
+    margin: 0;
+    color: var(--hp-text);
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.hp-mk-empty p {
+    max-width: 32rem;
+    margin: 0;
+    font-size: 0.875rem;
+}
+
+/* HP: nama dan aksi di baris pertama, isi dan status di baris kedua. */
+@media (max-width: 639px) {
+    .hp-mk-list {
+        padding: 0.75rem;
+    }
+
+    .hp-mk-row {
+        display: grid;
+        grid-template-areas:
+            "grip pos name more"
+            "grip pos meta status";
+        grid-template-columns: auto auto minmax(0, 1fr) auto;
+        gap: 0.25rem 0.5rem;
+        padding: 0.625rem 0.5rem 0.625rem 0.25rem;
+    }
+
+    .hp-mk-grip { grid-area: grip; }
+    .hp-mk-pos { grid-area: pos; width: 1.25rem; }
+    .hp-mk-name { grid-area: name; padding-inline-start: 0; }
+    .hp-mk-more { grid-area: more; }
+
+    .hp-mk-meta {
+        grid-area: meta;
+        white-space: normal;
+    }
+
+    .hp-mk-status {
+        grid-area: status;
+        justify-self: end;
+        min-width: 0;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .hp-mk-row,
+    .hp-mk-pos {
+        transition: none;
+    }
 }

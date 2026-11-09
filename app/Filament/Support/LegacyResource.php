@@ -6,6 +6,8 @@ use App\Models\Artikel;
 use App\Models\Kategori;
 use App\Models\KategoriArtikel;
 use App\Support\LegacyMedia;
+use Closure;
+use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
@@ -17,6 +19,7 @@ use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Infolists\Components\TextEntry;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
@@ -321,5 +324,27 @@ abstract class LegacyResource extends Resource
         return $table->columns($columns)->filters($filters)->recordActions($actions)
             ->defaultSort($definition['sort'] ?? $definition['pk'], $definition['sortDirection'] ?? 'desc')->paginated([10, 25, 50, 100])->defaultPaginationPageOption(25)
             ->emptyStateHeading('Belum ada data')->emptyStateDescription('Data akan muncul di sini setelah ditambahkan atau diterima melalui website.');
+    }
+
+    /**
+     * Tombol "Susun ulang" di atas tabel: baris diseret (atau dipindah dengan tombol panah), lalu
+     * kolom $column diisi 1, 2, 3, … menurut urutan baris yang tampil. Tersimpan setiap kali baris dilepas,
+     * dan website langsung memakai urutan baru. Hanya untuk pengguna yang boleh mengedit.
+     * Dipakai Kategori mesin (per kelompok); $condition menentukan kapan tombolnya ada.
+     */
+    public static function susunUlang(Table $table, string $column, bool|Closure $condition = true): Table
+    {
+        return $table->reorderable($column, $condition)
+            ->authorizeReorder(fn (): bool => static::canCreate())
+            ->reorderRecordsTriggerAction(fn (Action $action, bool $isReordering): Action => $action
+                ->button()
+                ->label($isReordering ? 'Selesai menyusun' : 'Susun ulang')
+                ->icon($isReordering ? 'heroicon-m-check' : 'heroicon-m-arrows-up-down')
+                ->color($isReordering ? 'primary' : 'gray'))
+            ->afterReordering(fn () => Notification::make()
+                ->title('Urutan disimpan')
+                ->body('Website langsung memakai urutan baru.')
+                ->success()
+                ->send());
     }
 }
