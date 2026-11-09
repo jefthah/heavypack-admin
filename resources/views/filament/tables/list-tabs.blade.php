@@ -18,4 +18,11 @@
             <span>{{ $notice }}</span>
         </p>
     @endif
+
+    @if (filled($hint ?? null))
+        <p class="hp-table-notice hp-table-notice--hint" role="note">
+            <x-filament::icon icon="heroicon-m-information-circle" />
+            <span>{{ $hint }}</span>
+        </p>
+    @endif
 </div>

@@ -74,7 +74,7 @@ class KategoriResource extends LegacyResource
                             ->integer()
                             ->minValue(0)
                             ->default(fn (): int => (int) Kategori::query()->max('urutan') + 1)
-                            ->helperText('Urutan di filter dan tombol jenis mesin di website. Angka kecil tampil lebih dulu. Kategori tanpa produk tidak tampil di filter.'),
+                            ->helperText('Urutan di filter dan tombol jenis mesin di website. Angka kecil tampil lebih dulu. Lebih mudah: di daftar Kategori mesin pilih kelompoknya, klik Susun ulang, lalu seret barisnya. Kategori tanpa produk tidak tampil di filter.'),
                     ])
                     ->columns(2),
                 Section::make('Alamat di website')
@@ -102,7 +102,7 @@ class KategoriResource extends LegacyResource
                             ->rows(8)
                             ->live(debounce: 500)
                             ->hint(fn (?string $state): string => mb_strlen(static::plainText($state)).' karakter teks')
-                            ->helperText('Hanya ±180 karakter pertama yang tampil di halaman kategori, dan ±155 di Google. Kode HTML seperti <b> dibuang, jadi tulis kalimat terpenting di awal.'),
+                            ->helperText('±180 karakter pertama menjadi ringkasan di atas halaman kategori dan ±155 dipakai Google, jadi tulis kalimat terpenting di awal. Teks lengkapnya (paragraf, daftar, huruf tebal) tampil di bagian "Tentang …" di bawah daftar mesin.'),
                     ]),
             ])->columnSpan(['lg' => 2]),
             Group::make([
@@ -130,9 +130,14 @@ class KategoriResource extends LegacyResource
 
     public static function table(Table $table): Table
     {
-        return parent::table($table)
+        $table = parent::table($table)
             ->columns([
                 TextColumn::make('id_kategoris')->label('ID')->sortable()->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('urutan')
+                    ->label('Urutan')
+                    ->tooltip('Urutan di kelompoknya pada filter website. Angka kecil tampil lebih dulu.')
+                    ->sortable()
+                    ->toggleable(),
                 TextColumn::make('submenu')
                     ->label('Nama kategori')
                     ->formatStateUsing(fn (?string $state, Kategori $record): HtmlString => new HtmlString(view('filament.tables.category-name', [
@@ -186,7 +191,8 @@ class KategoriResource extends LegacyResource
                     ->placeholder('Semua kelompok')
                     ->options(fn (): array => Kategori::query()->where('kategori', '!=', '')->distinct()->orderBy('kategori')->pluck('kategori', 'kategori')->all())
                     ->searchable()
-                    ->modifyFormFieldUsing(fn (Select $field): Select => $field->hiddenLabel()),
+                    ->modifyFormFieldUsing(fn (Select $field): Select => $field->hiddenLabel()
+                        ->helperText('Pilih satu kelompok untuk bisa menyusun urutannya.')),
             ], layout: FiltersLayout::AboveContent)
             ->filtersFormColumns(1)
             ->deferFilters(false)
@@ -217,14 +223,32 @@ class KategoriResource extends LegacyResource
             ->emptyStateIcon('heroicon-o-squares-2x2')
             ->emptyStateHeading('Kategori tidak ditemukan')
             ->emptyStateDescription('Coba kata kunci, tab, atau kelompok lain, atau tambahkan kategori baru.');
+
+        // Urutan berlaku per kelompok, jadi tombol Susun ulang baru muncul setelah satu kelompok dipilih;
+        // tanpa itu kategori dari semua kelompok bercampur dalam satu daftar. Saat satu kelompok dipilih,
+        // daftar langsung tampil menurut urutan website; tanpa kelompok, yang terbaru di atas.
+        return static::susunUlang($table, 'urutan', fn (HasTable $livewire): bool => static::kelompokDipilih($livewire))
+            ->defaultSort(
+                fn (HasTable $livewire): string => static::kelompokDipilih($livewire) ? 'urutan' : 'id_kategoris',
+                fn (HasTable $livewire): string => static::kelompokDipilih($livewire) ? 'asc' : 'desc',
+            );
+    }
+
+    /** Apakah daftar sedang disaring ke satu kelompok mesin (filter "Kelompok mesin"). */
+    protected static function kelompokDipilih(HasTable $livewire): bool
+    {
+        return filled($livewire->getTableFilterState('kategori')['value'] ?? null);
     }
 
     /**
      * Two-letter mark for the row avatar, e.g. "Double Chamber Vacuum Machine" -> "DC".
+     * Words that do not start with a letter or digit are skipped: "Shrink & L-Side Sealing" -> "SL".
      */
     public static function initials(string $name): string
     {
-        return Str::of($name)->squish()->explode(' ')->take(2)
+        return Str::of($name)->squish()->explode(' ')
+            ->filter(fn (string $word): bool => (bool) preg_match('/^[\pL\pN]/u', $word))
+            ->take(2)
             ->map(fn (string $word): string => Str::upper(Str::substr($word, 0, 1)))
             ->implode('');
     }

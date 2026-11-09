@@ -382,7 +382,7 @@ return [
             'label' => 'Urutan di filter',
             'type' => 'number',
             'default' => 'next',
-            'note' => 'Angka kecil tampil lebih dulu. Kelompok yang belum punya kategori berisi produk tidak tampil di filter.',
+            'note' => 'Angka kecil tampil lebih dulu; urutan dihitung per brand. Lebih mudah: di daftar Menu katalog buka tab brand-nya lalu seret barisnya lewat pegangan ⋮⋮. Kelompok yang belum punya kategori berisi produk tidak tampil di filter.',
         ], [
             'name' => 'judul',
             'label' => 'Judul halaman',
@@ -392,10 +392,12 @@ return [
             'name' => 'deskripsi',
             'label' => 'Deskripsi',
             'type' => 'textarea',
+            'note' => '±180 karakter pertama menjadi ringkasan di atas halaman kelompok dan ±155 dipakai Google, jadi tulis kalimat terpenting di awal. Teks lengkapnya (paragraf, daftar, huruf tebal) tampil di bagian "Tentang …" di bawah daftar mesin.',
         ]],
         'columns' => ['urutan', 'menu', 'url_menu', 'brand', 'industri'],
         'sort' => 'urutan',
         'sortDirection' => 'asc',
+        // Daftarnya bukan tabel ini, melainkan daftar per brand yang bisa diseret (MenuResource\Pages\ListMenu).
         // Kelompok yang masih dipakai kategori tidak bisa dihapus; slug yang diganti ikut diteruskan.
         'references' => [[
             'table' => 'kategoris',
