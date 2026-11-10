@@ -23,6 +23,19 @@ class ListKategori extends ListLegacyRecords
      */
     protected ?array $cachedCategoryCounts = null;
 
+    /**
+     * Tautan "Atur urutan" di form kategori membuka daftar yang sudah disaring ke satu kelompok
+     * dengan ?susun=1, jadi baris langsung bisa diseret tanpa klik "Susun ulang" dulu.
+     */
+    public function mount(): void
+    {
+        parent::mount();
+
+        if (request()->boolean('susun') && static::getResource()::canCreate()) {
+            $this->isTableReordering = true;
+        }
+    }
+
     public function getPageClasses(): array
     {
         return ['hp-list', 'hp-categories'];

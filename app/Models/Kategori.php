@@ -41,6 +41,15 @@ class Kategori extends LegacyRecord
         return $kelompok !== '' && $kategori !== '' ? 'mesin/'.rawurlencode($kelompok).'/'.rawurlencode($kategori) : null;
     }
 
+    /** Urutan sesudah kategori terakhir di kelompok ini (tanpa kategori $kecuali). */
+    public static function urutanTerakhir(string $kelompok, mixed $kecuali = null): int
+    {
+        return (int) static::query()
+            ->where('url_kategori', $kelompok)
+            ->when($kecuali !== null, fn ($query) => $query->whereKeyNot($kecuali))
+            ->max('urutan') + 1;
+    }
+
     protected static function booted(): void
     {
         parent::booted();
@@ -53,6 +62,20 @@ class Kategori extends LegacyRecord
                 $kategori->kategori = trim($menu);
             } elseif (blank($kategori->kategori)) {
                 $kategori->kategori = (string) $kategori->url_kategori;
+            }
+        });
+
+        // Urutan di kelompok tidak diisi di form: kategori baru, atau kategori yang pindah kelompok,
+        // ditaruh paling akhir di kelompoknya. Urutannya lalu diatur dengan menyeret di daftar Kategori mesin.
+        // (LegacyRecord sudah mengisi urutan yang kosong dengan 0 saat "saving", sebelum "creating".)
+        static::creating(function (self $kategori): void {
+            if ((int) $kategori->urutan <= 0) {
+                $kategori->urutan = static::urutanTerakhir((string) $kategori->url_kategori);
+            }
+        });
+        static::updating(function (self $kategori): void {
+            if ($kategori->isDirty('url_kategori') && ! $kategori->isDirty('urutan')) {
+                $kategori->urutan = static::urutanTerakhir((string) $kategori->url_kategori, $kategori->getKey());
             }
         });
 
