@@ -92,8 +92,9 @@ return [
         ]],
         'columns' => ['nama_produk', 'judul_produk', 'kategori.submenu', 'brand', 'harga_produk', 'status_prod'],
         'filters' => ['category', 'brand'],
-        // The legacy admin lists machines by ascending ID (bawaanadmin/page/mesin/datamesin.php).
-        'sortDirection' => 'asc',
+        // Produk terbaru (ID terbesar) paling atas, sama dengan katalog website. Admin lama
+        // (bawaanadmin/page/mesin/datamesin.php) dulu mengurutkan dari ID terkecil.
+        'sortDirection' => 'desc',
         // With status_prod filled, the website detail page also shows "{nama_produk} -2.jpg" to "-4.jpg".
         'gallery' => [
             'directory' => 'produk-hv',
