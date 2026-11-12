@@ -12,6 +12,7 @@ use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Field;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\Select;
@@ -21,6 +22,7 @@ use Filament\Forms\Components\Toggle;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
+use Filament\Schemas\Components\Component;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
@@ -196,7 +198,7 @@ abstract class LegacyResource extends Resource
                     }
                 });
             }
-            $fields[] = $component;
+            array_push($fields, ...static::formField($name, $component));
         }
         $sections = [Section::make($definition['label'])->schema($fields)->columns(2)->columnSpanFull()];
         $uploads = [];
@@ -217,6 +219,17 @@ abstract class LegacyResource extends Resource
         }
 
         return $schema->components($sections);
+    }
+
+    /**
+     * Komponen form untuk satu kolom definisi. Resource bisa menyesuaikan komponennya, menggantinya,
+     * atau menambah komponen sesudahnya (mis. Produk: Merek berupa pilihan dan keterangan rak brand).
+     *
+     * @return list<Component>
+     */
+    protected static function formField(string $name, Field $component): array
+    {
+        return [$component];
     }
 
     /**
